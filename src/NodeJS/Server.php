@@ -51,6 +51,11 @@ abstract class Server
     protected $nodeModulesPath;
 
     /**
+     * @var boolean Whether we want to disallow bad SSL connections.
+     */
+    protected $rejectUnauthorized;
+
+    /**
      * @var Process
      */
     protected $process;
@@ -76,7 +81,8 @@ abstract class Server
         $nodeBin = null,
         $serverPath = null,
         $threshold = 2000000,
-        $nodeModulesPath = ''
+        $nodeModulesPath = '',
+        $rejectUnauthorized = true,
     ) {
         if (null === $nodeBin) {
             $nodeBin = 'node';
@@ -84,6 +90,7 @@ abstract class Server
 
         $this->setHost($host);
         $this->setPort($port);
+        $this->setRejectUnauthorized($rejectUnauthorized);
 
         if (!empty($nodeModulesPath)) {
             $this->setNodeModulesPath($nodeModulesPath);
@@ -222,6 +229,26 @@ abstract class Server
     }
 
     /**
+     * Setter Reject bad SSL connections.
+     *
+     * @param bool Whether we should reject unsure SSL connections.
+     */
+    public function setRejectUnauthorized($rejectUnauthorized)
+    {
+        $this->rejectUnauthorized = $rejectUnauthorized;
+    }
+
+    /**
+     * Getter Reject bad SSL connections.
+     *
+     * @return bool Whether we should reject unsure SSL connections.
+     */
+    public function getRejectUnauthorized()
+    {
+        return $this->rejectUnauthorized;
+    }
+
+    /**
      * Setter server script path
      *
      * @param string $serverPath Path to server script
@@ -317,7 +344,8 @@ abstract class Server
                 $this->serverPath,
             ));
             $processBuilder->setEnv('HOST', $this->host)
-                ->setEnv('PORT', $this->port);
+                ->setEnv('PORT', $this->port)
+                ->setEnv('NODE_TLS_REJECT_UNAUTHORIZED', $this->rejectUnauthorized);
 
             if (!empty($this->nodeModulesPath)) {
                 $processBuilder->setEnv('NODE_PATH', $this->nodeModulesPath);
